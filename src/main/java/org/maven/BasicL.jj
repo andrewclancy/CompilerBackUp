@@ -1,0 +1,283 @@
+/**
+ * JavaCC template file created by SF JavaCC plugin 1.5.28+ wizard for JavaCC 1.5.0+
+ */options{	MULTI=true;
+    NODE_PREFIX="";}PARSER_BEGIN(BasicL)package org.maven;
+import java.util.*;
+public class BasicL{  public static void main(String args []) throws ParseException{
+		try{
+			BasicL parser=null;
+			if (args.length == 0){
+			  System.out.println("Input required. Now reading from standard input...");
+			  parser = new BasicL(System.in);
+			}else if (args.length == 1){
+				try{
+					parser = new BasicL(new java.io.FileInputStream(args[0]));
+				}catch (java.io.FileNotFoundException e){
+					  System.err.println("File " + args[0] + " not found");
+					  return;
+				}
+			}
+	
+			for (Token t = getNextToken(); t.kind!=EOF; t = getNextToken()){
+			  	//program();
+			  	SimpleNode root = parser.program();
+			  	root.dump("");
+				//System.out.print(t.image + " ");
+			}		
+		}catch(TokenMgrError e){
+			System.err.println("Input error:");
+		}
+	}
+
+	void error_skipto(int kind) {
+	  ParseException e = generateParseException();  // generate the exception object.
+	  System.out.println(e.toString());  // print the error message
+	  Token t;
+	  do {
+	    t = getNextToken();
+	  } while (t.kind != kind);
+	}
+}PARSER_END(BasicL)/*----------------------------------------------------------------------
+							Lexical Analyser 
+------------------------------------------------------------------------*/
+TOKEN_MGR_DECLS :
+{
+	static int commentNesting = 0;
+}
+
+SKIP : /*** Ignoring spaces/tabs/newlines ***/
+{
+	" "
+	| "\t"
+	| "\n"
+	| "\b"
+	| "\r"
+	| "\f"
+}
+
+SKIP : /* COMMENTS */
+{
+	"/*" { commentNesting++; } : IN_COMMENT
+}
+<IN_COMMENT> SKIP :
+{
+	"/*" { commentNesting++; }
+	| "*/" { commentNesting--;
+	if (commentNesting == 0)
+	SwitchTo(DEFAULT);
+	}
+	| <~[]>
+}
+
+/* SKIP single line comments.*/
+SKIP :
+{
+	<"--" (~["\r", "\n"])*>
+}
+
+TOKEN :
+{
+    <LPAREN: "(">
+    | <RPAREN: ")">
+    | <LBRACE: "{">
+    | <RBRACE: "}">
+    | <COMMA: ",">
+    | <SEMICOLON: ";">
+    | <COLON: ":">
+    | <DOT: ".">
+    | <ASSIGN: ":=">
+    | <QUESTION: "?">
+    | <EXCLAMATION: "!">
+}
+
+TOKEN :
+{
+    <ADD: "+">
+    | <SUB: "-">
+    | <MULT: "*">
+    | <DIV: "/">
+    | <MOD: "%">
+    | <EQ: "=">
+    | <NOTEQ: "!=">
+    | <LT: "<">
+    | <GT: ">">
+    | <LE: "<=">
+    | <GE: ">=">
+}
+
+TOKEN :
+{
+    < AND : "and" >
+ 	| < EQUALS : "equals" >
+ 	| < BEGIN : "begin" >
+ 	| < LEFTBRACKET : "leftbracket" >
+ 	| < RIGHTBRAKET : "rightbracket" >
+ 	| < END  : "end" >
+ 	| < ASSIGNMENT : "assignment" >
+ 	| < EXCLAM : "exclam" >
+ 	| < QMARK : "qmark" >
+ 	| < PLUS : "plus" >
+ 	| < MINUS : "minus" >
+ 	| < MULTIPLY : "multiply" >
+ 	| < DIVIDE : "divide" >
+ 	| < NOTEQUAL : "notequal" >
+ 	| < LESSTHAN : "lessthan" >
+    | < BOOL : "boolean" >
+    | < CONST : "const" >
+    | < DO : "do" >
+    | < ELSE : "else" >
+    | < FALSE : "false" >
+    | < IF : "if" >
+    | < INT : "int" >
+    | < MAIN : "main" >
+    | < NOT : "not" >
+    | < OR : "or" >
+    | < REAL : "real" >
+    | < RETURN : "return" >
+    | < STRING : "string" >
+    | < THEN : "then" >
+    | < TRUE : "true" >
+    | < VAR : "var" >
+    | < VOID : "void" >
+    | < WHILE : "while" >
+    | < GREATERTHAN :  "greaterthan" >
+    | < LESSTHANEQUAL : "lessthanequal" >
+    | < GREATERTHANEQUAL : "greaterthanequal" >
+	
+	
+}
+
+TOKEN :
+{
+    < NUMBER : <DIGITS> | <DIGITS> "." <DIGITS>>
+    | < IDENTIFIER : (<LETTER>)(<DIGIT> | <LETTER> | <UNDERSCORE>)*>
+    | <STRINGS: "\"" (~["\"","\\","\n","\r"] | "\\" (["n","t","b","r","f","\\","\'","\""] | ["0"-"7"] (["0"-"7"])? | ["0"-"3"] ["0"-"7"] ["0"-"7"]))* "\"">
+}
+
+TOKEN :
+{
+    < #DIGIT : (["0" - "9"]) >
+    | < #DIGITS : (<DIGIT>)+ >
+    | < #LETTER : (["a" - "z", "A" - "Z"]) >
+    | < #LETTERS : (<LETTER>)+ >
+    | < #UNDERSCORE : ("_") >
+}
+
+TOKEN :
+{
+    <OTHER : ~[]>
+}
+
+/*----------------------------------------------------------------------
+							Grammer Below
+------------------------------------------------------------------------*/
+SimpleNode program() : {}
+{
+  	{
+  		SimpleNode jjtn000 = new SimpleNode(JJTPROGRAM);
+  		boolean jjtc000 = true;
+  		jjtree.openNodeScope(jjtn000);
+	}
+	(
+	  (decl())*
+	  (function())* 
+	  main_prog()
+	)<EOF>
+
+	{	  jjtree.closeNodeScope(jjtn000, true);
+	  jjtc000 = false;  
+	}
+	{	  return jjtThis;
+	}
+}
+
+void decl(): {}
+{
+  (var_decl()|const_decl())
+}
+
+void var_decl() : {Token t; ArrayList<String> idList;}
+{
+	<VAR> idList = ident_list() <COLON> t = type()(<COMMA> ident_list() <COLON> type())* <SEMICOLON>
+}
+
+void const_decl():{}
+{
+	 <CONST> <IDENTIFIER> <COLON> type() <EQUALS> expresion() (<COMMA> <IDENTIFIER> <COLON> type() <EQUALS> expresion())* <SEMICOLON>
+}
+
+void function():{Token t; String s;}
+{
+	<BEGIN>
+	t = type() 
+	s = identifier()
+	<LEFTBRACKET> param_list() <RIGHTBRAKET>
+	
+	(decl())*//possibly *
+	(statement() <SEMICOLON> )*
+	<RETURN>(expresion() | {} ) <SEMICOLON>
+	<END>
+}
+
+void param_list(): {}
+{
+	(<IDENTIFIER> <COLON> type() ( <COMMA> <IDENTIFIER> <COLON> type())* )| {}
+}
+
+Token type(): {Token t;}
+{
+  	(t = <INT> | t = <BOOL> | t = <REAL> | t = <STRING> | t = <VOID>) {return t;}
+}
+
+void main_prog(): {}
+{
+	 (decl()) (statement() <SEMICOLON> )*
+}
+
+void statement(): {}
+{
+  	LOOKAHEAD(2)
+	identifier() (<ASSIGNMENT> ( expresion() ( <LEFTBRACKET> arg_list() <RIGHTBRAKET> | {}) | <STRING> ) | <LEFTBRACKET> arg_list() <RIGHTBRAKET> ) // added the arg list for squares.imp
+	| <EXCLAM> expresion()
+	| <QMARK> identifier()
+	| <BEGIN> (statement() <SEMICOLON>)+ <END>
+	| <IF> condition() <THEN> statement() ( <ELSE> statement() | {} )
+	| <WHILE> <LEFTBRACKET> condition() <RIGHTBRAKET> <DO> statement()
+
+}
+
+void expresion(): {}
+{
+  fragment() fragmentPrime()
+}
+
+void fragment() : {}
+{
+	( identifier() | (<NUMBER>) | ((<PLUS>|<MINUS>) fragment()) )  
+}
+
+void fragmentPrime() : {}
+{
+	((<PLUS>|<MINUS>|<MULTIPLY>|<DIVIDE>) fragment()) fragmentPrime() | {}
+}
+
+void condition() : {}
+{
+	<NOT> expresion() 
+	| expresion() (((<EQUALS> | <NOTEQUAL> | <LESSTHAN> | <GREATERTHAN> | <LESSTHANEQUAL> | <GREATERTHANEQUAL> | <AND> | <OR>) expresion()) | {})
+}
+
+ArrayList<String> ident_list() : {String s; ArrayList<String> list = new ArrayList<String>();}
+{
+	s = identifier() {list.add(s);} (<COMMA> s = identifier() {if(!list.contains(s)) list.add(s);})* {return list;}
+}
+
+void arg_list() : {}
+{
+	<IDENTIFIER> (<COMMA> <IDENTIFIER>)* | {}
+}
+
+String identifier() : {Token t;}
+{
+  t = <IDENTIFIER> {return t.image;}
+}	
